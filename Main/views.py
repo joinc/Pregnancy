@@ -55,19 +55,20 @@ def get_user_list(request):
 ######################################################################################################################
 
 
-@login_required
-def user_list(request):
+def user_add_error(request, initial, info):
     userlist = get_user_list(request)
     usercount = userlist.count()
-    form_useradd = FormUserRegistration()
-    return render(request, 'users.html',
-                  {'userlist': userlist, 'usercount': usercount, 'form_useradd': form_useradd, })
+    messages.info(request, info)
+    form_useradd = FormUserRegistration(initial=initial)
+    show_modal = True
+    data = {'userlist': userlist, 'usercount': usercount, 'form_useradd': form_useradd, 'show_modal': show_modal, }
+    return data
 
 ######################################################################################################################
 
 
 @login_required
-def user_add(request):
+def user_list(request):
     if request.POST:
         username = request.POST['username']
         last_name = request.POST['last_name']
@@ -75,31 +76,30 @@ def user_add(request):
         password = request.POST['password']
         password2 = request.POST['password2']
         role = request.POST['role']
+        initial = {'last_name': last_name, 'first_name': first_name, 'role': role, }
         if User.objects.filter(username=username).exists():
-            messages.info(request, 'Пользователь ' + username + ' уже существует.')
-            userlist = get_user_list(request)
-            usercount = userlist.count()
-            form_useradd = FormUserRegistration()
-            show_modal = True
-            return render(request, 'users.html',
-                      {'userlist': userlist, 'usercount': usercount, 'form_useradd': form_useradd,
-                       'show_modal': show_modal, })
-        if password != password2:
-            messages.info(request, 'Пароли не совпадают.')
-
-    #form_useradd = FormUserRegistration(request.POST)
-    #username = form_useradd.username
-
-    '''
-    if User.objects.filter(username=form_useradd.username):
-        messages.info(request, 'Пользователь с данным логином уже существует.')
+            info = 'Пользователь ' + username + ' уже существует.'
+            return render(request, 'users.html', user_add_error(request, initial, info))
+        elif password != password2:
+            info = 'Пароли не совпадают.'
+            initial['username'] = username
+            return render(request, 'users.html', user_add_error(request, initial, info))
+        else:
+            user = User.objects.create_user(username=username, email='', password=password2)
+            user.last_name = last_name
+            user.first_name = first_name
+            user.save()
+            profile = UserProfile()
+            profile.user = user
+            profile.owner = request.user
+            profile.role = role
+            profile.save()
+            return redirect(reverse('userlist'))
     else:
-        #if form_useradd.is_valid():
-        username = form_useradd.username
-        email = ''
-        password = form_useradd.password
-        new_user = User.objects.create_user(username, email, password)
-        new_user.save()
-        #if form_useradd.password != form_useradd.password2:
-    '''
-    return redirect(reverse('index'))
+        userlist = get_user_list(request)
+        usercount = userlist.count()
+        form_useradd = FormUserRegistration()
+        return render(request, 'users.html',
+                      {'userlist': userlist, 'usercount': usercount, 'form_useradd': form_useradd, })
+
+######################################################################################################################
