@@ -1,0 +1,44 @@
+{% load i18n %}{% load static %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{% block html_title %}Заголовок{% endblock %}</title>
+    <link rel='stylesheet' href='{% static "css/bootstrap.min.css" %}' type='text/css' />
+    <link rel='shortcut icon' type='image/png' href='{% static "img/favicon.ico" %}'>
+    {% block html_head %}{% endblock %}
+    <script src='{% static "js/jquery-3.4.1.min.js" %}'></script>
+    <script src='{% static "js/bootstrap.min.js" %}'></script>
+    <script src='{% static "fa/js/all.js" %}'></script>
+</head>
+<body>
+{% block html_body_menu %}
+    {% if request.user.is_authenticated %}
+        <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+            <div class="btn-toolbar" role="toolbar">
+                <div class="btn-group mr-2" role="group">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">☰</button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <span class="dropdown-item"><strong>{% firstof user.get_full_name user.get_short_name user.get_username %}</strong></span>
+                        {% if request.user.is_superuser %}
+                            <div class="dropdown-divider"></div>
+                            <a href="{% url 'users' %}" class="dropdown-item">
+                                <div class="row">
+                                    <div class="col-auto mr-auto">Пользователи</div>
+                                    <div class="col-auto mt-1 text-right"><i class="fas fa-user-friends"></i></div>
+                                </div>
+                            </a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a href="{% url 'logout' %}" class="dropdown-item">Выход</a>
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'index' %}" class="navbar-brand">&nbsp;Главная</a>
+        </nav>
+    {% endif %}
+{% endblock %}
+<main role="main" class="container">
+{% block html_body %}{% endblock %}
+</main>
+</body>
+</html>

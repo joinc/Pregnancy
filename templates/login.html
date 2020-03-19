@@ -1,0 +1,29 @@
+{% extends "base.html" %}{% load static %}
+{% block html_title %}Авторизация{% endblock %}
+{% block html_head %}<link rel='stylesheet' href='{% static "css/floating-labels.css" %}' type='text/css' />{% endblock %}
+{% block html_body %}
+    {% if request.user.is_authenticated %}
+        <meta http-equiv="REFRESH" content="0;url={% url 'index' %}">
+    {% else %}
+        <form class="form-signin" method="post" action="./">
+            <div class="text-center mb-4">
+                <h1 class="h3 mb-3 font-weight-normal">Реестр справок о постановке на учет по беременности и родам</h1>
+                <h4>Пожалуйста войдите:</h4>
+                {% for message in messages %}
+                    <div class="alert alert-danger" role="alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% csrf_token %}
+            <div class="form-label-group">
+                <input type="text" id="id_username" name="username" class="form-control" placeholder="Логин" required autofocus>
+                <label for="id_username">Логин</label>
+            </div>
+            <div class="form-label-group">
+                <input type="password" id="id_password" name="password" class="form-control" placeholder="Пароль" required>
+                <label for="id_password">Пароль</label>
+            </div>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+            <p class="mt-5 mb-3 text-muted text-center">Министерство труда и социального развития Омской области</p>
+        </form>
+    {% endif %}
+{% endblock %}

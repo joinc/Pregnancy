@@ -1,5 +1,10 @@
+__pycache__/
 .idea/
 venv/
+Main/migrations/
+Main/static/
+Main/migrations/__init__.py
+Main/__init__.py
 manage.py
 db.sqlite3
 Pregnancy/settings.py
