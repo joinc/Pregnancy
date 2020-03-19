@@ -18,10 +18,10 @@
                 <div class="btn-group mr-2" role="group">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">☰</button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <span class="dropdown-item"><strong>{% firstof user.get_full_name user.get_short_name user.get_username %}</strong></span>
+                        <span class="dropdown-item"><strong>Здравствуйте, {% firstof user.get_full_name user.get_short_name user.get_username %}</strong></span>
                         {% if request.user.is_superuser %}
                             <div class="dropdown-divider"></div>
-                            <a href="{% url 'users' %}" class="dropdown-item">
+                            <a href="{% url 'userlist' %}" class="dropdown-item">
                                 <div class="row">
                                     <div class="col-auto mr-auto">Пользователи</div>
                                     <div class="col-auto mt-1 text-right"><i class="fas fa-user-friends"></i></div>
