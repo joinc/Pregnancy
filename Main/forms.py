@@ -15,14 +15,14 @@ class FormUserRegistration(forms.Form):
         ),
         required=True,
     )
-    last_name = forms.CharField(
+    first_name = forms.CharField(
         label='Имя',
         widget=forms.TextInput(
             attrs={'type': 'text', 'class': 'form-control', 'placeholder': 'Введите имя пользователя', }
         ),
         required=True,
     )
-    first_name = forms.CharField(
+    last_name = forms.CharField(
         label='Фамилия',
         widget=forms.TextInput(
             attrs={'type': 'text', 'class': 'form-control', 'placeholder': 'Введите фамилию пользователя', }

@@ -17,7 +17,7 @@ class UserProfile(models.Model):
         return '{0}'.format(self.user.get_full_name())
 
     class Meta:
-        ordering = 'create_date', 'user',
+        ordering = 'blocked', '-role', 'user',
         verbose_name = 'Профиль'
         verbose_name_plural = 'Профили'
         managed = True
@@ -26,17 +26,17 @@ class UserProfile(models.Model):
 
 
 class Resident(models.Model):
-    first_name = models.CharField('Фамилия', max_length=32, default='', )
-    last_name = models.CharField('Имя', max_length=32, default='', )
+    first_name = models.CharField('Имя', max_length=32, default='', )
+    last_name = models.CharField('Фамилия', max_length=32, default='', )
     middle_name = models.CharField('Отчество', max_length=32, default='', )
     birthday = models.DateField('Дата рождения', null=True, )
     snils = models.CharField('СНИЛС', max_length=11, default='', )
 
     def __str__(self):
-        return '{0} {1} {3}'.format(self.last_name, self.middle_name, self.first_name)
+        return '{0} {1} {3}'.format(self.last_name, self.first_name, self.middle_name)
 
     class Meta:
-        ordering = 'first_name', 'last_name',
+        ordering = 'last_name', 'first_name',
         verbose_name = 'Гражданка'
         verbose_name_plural = 'Гражданки'
         managed = True

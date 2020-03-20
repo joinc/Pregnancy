@@ -13,7 +13,8 @@ from .forms import FormUserRegistration
 
 @login_required
 def index(request):
-    return render(request, 'index.html', )
+    profile = get_object_or_404(UserProfile, user=request.user)
+    return render(request, 'index.html', {'profile': profile, })
 
 ######################################################################################################################
 
@@ -55,14 +56,34 @@ def get_user_list(request):
 ######################################################################################################################
 
 
+@login_required
 def user_add_error(request, initial, info):
+    profile = get_object_or_404(UserProfile, user=request.user)
     userlist = get_user_list(request)
     usercount = userlist.count()
     messages.info(request, info)
     form_useradd = FormUserRegistration(initial=initial)
     show_modal = True
-    data = {'userlist': userlist, 'usercount': usercount, 'form_useradd': form_useradd, 'show_modal': show_modal, }
+    data = {'profile': profile, 'userlist': userlist, 'usercount': usercount, 'form_useradd': form_useradd,
+            'show_modal': show_modal, }
     return data
+
+######################################################################################################################
+
+
+@login_required
+def user_role_change(request, user_id):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    user = get_object_or_404(UserProfile, user=user_id)
+    if (profile.role == 2) or (profile.role == 1 and user.owner == profile.user):
+        if user.blocked:
+            user.blocked = False
+            user.save()
+        else:
+            user.blocked = True
+            user.save()
+    return redirect(reverse('userlist'))
+
 
 ######################################################################################################################
 
@@ -76,30 +97,36 @@ def user_list(request):
         password = request.POST['password']
         password2 = request.POST['password2']
         role = request.POST['role']
-        initial = {'last_name': last_name, 'first_name': first_name, 'role': role, }
+        initial = {'username': username, 'last_name': last_name, 'first_name': first_name, 'role': role, }
         if User.objects.filter(username=username).exists():
-            info = 'Пользователь ' + username + ' уже существует.'
-            return render(request, 'users.html', user_add_error(request, initial, info))
+            del initial['username']
+            return render(request, 'users.html', user_add_error(request, initial, 'Пользователь ' + username + ' уже существует.'))
         elif password != password2:
-            info = 'Пароли не совпадают.'
-            initial['username'] = username
-            return render(request, 'users.html', user_add_error(request, initial, info))
+            return render(request, 'users.html', user_add_error(request, initial, 'Пароли не совпадают.'))
+        elif len(password2) < 8:
+            return render(request, 'users.html', user_add_error(request, initial, 'Длина пароля менее 8 символов.'))
+        elif password2.isdigit():
+            return render(request, 'users.html', user_add_error(request, initial, 'Пароль состоит только из цифр.'))
+        elif password2 == username:
+            return render(request, 'users.html', user_add_error(request, initial, 'Пароль совпадает с логином.'))
         else:
-            user = User.objects.create_user(username=username, email='', password=password2)
-            user.last_name = last_name
-            user.first_name = first_name
-            user.save()
-            profile = UserProfile()
-            profile.user = user
-            profile.owner = request.user
-            profile.role = role
-            profile.save()
+            new_user = User.objects.create_user(username=username, email='', password=password2)
+            new_user.last_name = last_name
+            new_user.first_name = first_name
+            new_user.save()
+            new_profile = UserProfile()
+            new_profile.user = new_user
+            new_profile.owner = request.user
+            new_profile.role = role
+            new_profile.save()
             return redirect(reverse('userlist'))
     else:
+        profile = get_object_or_404(UserProfile, user=request.user)
         userlist = get_user_list(request)
         usercount = userlist.count()
         form_useradd = FormUserRegistration()
         return render(request, 'users.html',
-                      {'userlist': userlist, 'usercount': usercount, 'form_useradd': form_useradd, })
+                      {'profile': profile, 'userlist': userlist, 'usercount': usercount,
+                       'form_useradd': form_useradd, })
 
 ######################################################################################################################
