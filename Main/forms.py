@@ -7,7 +7,7 @@ from .choices import ROLE_CHOICES
 ######################################################################################################################
 
 
-class FormUserRegistration(forms.Form):
+class FormUser(forms.Form):
     username = forms.CharField(
         label='Логин пользователя',
         widget=forms.TextInput(
@@ -36,17 +36,31 @@ class FormUserRegistration(forms.Form):
         widget=forms.Select(attrs={'class': 'custom-select'}),
         required=True,
     )
-    password = forms.CharField(
+    passwd1 = forms.CharField(
         label='Пароль',
         widget=forms.TextInput(
-            attrs={'type': 'password', 'class': 'form-control', }
+            attrs={'type': 'password', 'class': 'form-control', 'autocomplete': 'off', }
         ),
         required=True,
     )
-    password2 = forms.CharField(
+    passwd2 = forms.CharField(
         label='Подтверждение пароля',
         widget=forms.TextInput(
-            attrs={'type': 'password', 'class': 'form-control', }
+            attrs={'type': 'password', 'class': 'form-control', 'autocomplete': 'off', }
+        ),
+        required=True,
+    )
+    changepasswd1 = forms.CharField(
+        label='Новый пароль',
+        widget=forms.TextInput(
+            attrs={'type': 'password', 'class': 'form-control', 'autocomplete': 'off', }
+        ),
+        required=True,
+    )
+    changepasswd2 = forms.CharField(
+        label='Подтверждение нового пароля',
+        widget=forms.TextInput(
+            attrs={'type': 'password', 'class': 'form-control', 'autocomplete': 'off', }
         ),
         required=True,
     )

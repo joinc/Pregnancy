@@ -1,6 +1,20 @@
 {% extends "base.html" %}{% load static %}
 
 {% block html_title %}Главная{% endblock %}
-
+{% block html_head %}<link rel='stylesheet' href='{% static "css/main.css" %}' type='text/css' />{% endblock %}
 {% block html_body %}
+    <main role="main" class="container">
+        <div class="my-3 p-3 bg-white rounded shadow-sm">
+            <h4 class="border-bottom border-gray pb-2 mb-0">Поиск в реестре справок о постановке на учет по беременности и родам:</h4>
+            <form method='post' action=''>
+                {% csrf_token %}
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="Введите СНИЛС" aria-label="SNILS" aria-describedby="button-search">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit" id="button-search"><i class="fas fa-search"></i> Поиск</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
 {% endblock %}

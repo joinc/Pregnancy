@@ -6,6 +6,7 @@
         <meta http-equiv="REFRESH" content="0;url={% url 'index' %}">
     {% else %}
         <form class="form-signin" method="post" action="./">
+            <input type="hidden" name="next" value="{{ next }}">
             <div class="text-center mb-4">
                 <h1 class="h3 mb-3 font-weight-normal">Реестр справок о постановке на учет по беременности и родам</h1>
                 <h4>Пожалуйста войдите:</h4>
