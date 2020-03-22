@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django import forms
-from django.contrib.auth.models import User
+from datetime import date
 from .choices import ROLE_CHOICES
 
 ######################################################################################################################
@@ -62,5 +62,49 @@ class FormUser(forms.Form):
         widget=forms.TextInput(
             attrs={'type': 'password', 'class': 'form-control', 'autocomplete': 'off', }
         ),
+        required=True,
+    )
+
+######################################################################################################################
+
+
+class FormSearch(forms.Form):
+
+    find = forms.CharField(
+        label='',
+        widget=forms.TextInput(attrs={'size': '40', 'placeholder': 'Введите СНИЛС',
+                                      'type': 'text', 'class': 'form-control',
+                                      'aria-label': 'Введите СНИЛС'}),
+        required=False,
+    )
+
+######################################################################################################################
+
+
+class FormUpload(forms.Form):
+
+    files = forms.FileField(
+        label='',
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control-file', 'multiple': True}),
+        required=True,
+    )
+
+######################################################################################################################
+
+
+class FormSelect(forms.Form):
+
+    start_date = forms.DateField(
+        label='Начальная дата',
+        widget=forms.widgets.DateInput(attrs={'type': 'text', 'class': 'input-sm form-control', }),
+        input_formats=('%d.%m.%Y', '%d/%m/%Y', '%d-%m-%Y'),
+        required=True,
+    )
+
+    end_date = forms.DateField(
+        label='Конечная дата',
+        widget=forms.widgets.DateInput(attrs={'type': 'text', 'class': 'input-sm form-control',}),
+        input_formats=('%d.%m.%Y', '%d/%m/%Y', '%d-%m-%Y'),
+        initial=date.today().__format__('%d.%m.%Y'),
         required=True,
     )

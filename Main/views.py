@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import time
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import auth, User
 from django.conf import settings
-from .models import UserProfile
-from .forms import FormUser
+from .models import UserProfile, Logs, Reference
+from .forms import FormUser, FormSearch, FormUpload, FormSelect
 
 ######################################################################################################################
 
@@ -14,7 +15,15 @@ from .forms import FormUser
 @login_required
 def index(request):
     profile = get_object_or_404(UserProfile, user=request.user)
-    return render(request, 'index.html', {'profile': profile, })
+    context = {'profile': profile, }
+    if request.POST:
+        search = request.POST['find']
+        context['form_search'] = FormSearch(initial={'find': search, })
+        context['toast'] = 'Вы искали ' + search + '.'
+        log_add(0, profile, search, None)
+    else:
+        context['form_search'] = FormSearch()
+    return render(request, 'index.html', context)
 
 ######################################################################################################################
 
@@ -51,6 +60,17 @@ def logout(request):
 ######################################################################################################################
 
 
+def log_add(event, participan, search_string, download_xml):
+    log = Logs()
+    log.event = event
+    log.participan = participan
+    log.search_string = search_string
+    log.download_xml = download_xml
+    log.save()
+
+######################################################################################################################
+
+
 def get_user_list(profile):
     if profile.role == 2:
         return UserProfile.objects.all()
@@ -61,7 +81,7 @@ def get_user_list(profile):
 ######################################################################################################################
 
 
-def user_list_data(request, initial, info):
+def user_list_context(request, initial, info):
     profile = get_object_or_404(UserProfile, user=request.user)
     userlist = get_user_list(profile)
     usercount = userlist.count()
@@ -71,10 +91,50 @@ def user_list_data(request, initial, info):
         form_user = FormUser(initial=initial)
     else:
         form_user = FormUser()
-    data = {'profile': profile, 'userlist': userlist, 'usercount': usercount, 'form_user': form_user, }
-    return data
+    context = {'profile': profile, 'userlist': userlist, 'usercount': usercount, 'form_user': form_user, }
+    return context
 
 ######################################################################################################################
+
+
+@login_required
+def logs_list(request):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    context = {'profile': profile, }
+    if request.POST:
+        start_date = request.POST['start_date']
+        end_date = request.POST['end_date']
+        logs = Logs.objects.all()
+        context['logs'] = logs
+        context['start_date'] = start_date
+        context['end_date'] = end_date
+        form_select = FormSelect(initial={'start_date': start_date, 'end_date': end_date, })
+    else:
+        form_select = FormSelect()
+    context['form_select'] = form_select
+    return render(request, 'logs.html', context)
+
+######################################################################################################################
+
+
+@login_required
+def upload(request):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    form_upload = FormUpload()
+    context = {'profile': profile, 'form_upload': form_upload, }
+    if request.POST:
+        successfully = []
+        for file in request.FILES.getlist('files'):
+            reference = Reference()
+            reference.load_owner = profile
+            successfully.append(str(file))
+            reference.xml_file.save(file.name, file)
+            reference.save()
+        context['successfully'] = successfully
+    return render(request, 'upload.html', context)
+
+######################################################################################################################
+
 
 @login_required
 def user_list(request):
@@ -109,32 +169,32 @@ def user_list(request):
                 new_profile.owner = request.user
                 new_profile.role = role
                 new_profile.save()
-                data = user_list_data(request, None, None)
-                data['toast'] = 'Создана учетная запись пользователя ' + new_user.get_full_name() + '.'
-                return render(request, 'users.html', data)
-            data = user_list_data(request, initial, info)
-            data['show_user'] = True
-            return render(request, 'users.html', data)
+                context = user_list_context(request, None, None)
+                context['toast'] = 'Создана учетная запись пользователя ' + new_user.get_full_name() + '.'
+                return render(request, 'users.html', context)
+            context = user_list_context(request, initial, info)
+            context['show_user'] = True
+            return render(request, 'users.html', context)
         elif 'blockuser' in request.POST:
             user_id = request.POST['useridblock']
             user = get_object_or_404(UserProfile, user=user_id)
             if (profile.role == 2) or (profile.role == 1 and user.owner == profile.user):
-                data = user_list_data(request, None, None)
+                context = user_list_context(request, None, None)
                 user.blocked = True
                 user.save()
-                data['toast'] = 'Пользователь ' + user.user.get_full_name() + ' заблокирован.'
-                return render(request, 'users.html', data)
+                context['toast'] = 'Пользователь ' + user.user.get_full_name() + ' заблокирован.'
+                return render(request, 'users.html', context)
             else:
                 return redirect(reverse('userlist'))
         elif 'unblockuser' in request.POST:
             user_id = request.POST['useridunblock']
             user = get_object_or_404(UserProfile, user=user_id)
             if (profile.role == 2) or (profile.role == 1 and user.owner == profile.user):
-                data = user_list_data(request, None, None)
+                context = user_list_context(request, None, None)
                 user.blocked = False
                 user.save()
-                data['toast'] = 'Пользователь ' + user.user.get_full_name() + ' разблокирован.'
-                return render(request, 'users.html', data)
+                context['toast'] = 'Пользователь ' + user.user.get_full_name() + ' разблокирован.'
+                return render(request, 'users.html', context)
             else:
                 return redirect(reverse('userlist'))
         elif 'changepassword' in request.POST:
@@ -154,21 +214,21 @@ def user_list(request):
                 else:
                     user.user.set_password(passwd2)
                     user.user.save()
-                    data = user_list_data(request, None, None)
-                    data['toast'] = 'Изменен пароль для пользователя ' + user.user.get_full_name() + '.'
-                    return render(request, 'users.html', data)
-                data = user_list_data(request, None, info)
-                data['user'] = user
-                data['show_passwd'] = True
-                return render(request, 'users.html', data)
+                    context = user_list_context(request, None, None)
+                    context['toast'] = 'Изменен пароль для пользователя ' + user.user.get_full_name() + '.'
+                    return render(request, 'users.html', context)
+                context = user_list_context(request, None, info)
+                context['user'] = user
+                context['show_passwd'] = True
+                return render(request, 'users.html', context)
             else:
                 return redirect(reverse('userlist'))
         else:
             return redirect(reverse('userlist'))
     else:
         if profile.role in [1, 2]:
-            data = user_list_data(request, None, None)
-            return render(request, 'users.html', data)
+            context = user_list_context(request, None, None)
+            return render(request, 'users.html', context)
         else:
             return redirect(reverse('index'))
 

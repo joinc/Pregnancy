@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load i18n %}{% load static %}
+
+{% block html_title %}Главная{% endblock %}
+{% block html_head %}
+    <link rel='stylesheet' href='{% static "css/bootstrap-datepicker.min.css" %}' type='text/css' />
+    <link rel='stylesheet' href='{% static "css/main.css" %}' type='text/css' />
+    <script src='{% static "js/bootstrap-datepicker.min.js" %}'></script>
+    <script src='{% static "js/locales/bootstrap-datepicker.ru.min.js" %}' charset='UTF-8'></script>
+{% endblock %}
+{% block html_body %}
+    <main role="main" class="container">
+        <div class="my-3 p-3 bg-white rounded shadow-sm">
+            <h4 class="border-bottom border-gray pb-2 mb-0">Просмотр статистики использования реестра справок о постановке на учет по беременности и родам:</h4>
+            <form method='post' class="mt-3" action='{% url 'logslist' %}'>
+                {% csrf_token %}
+                <div class="input-daterange input-group" id="datepicker">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">Выберите диапазон дат:</span>
+                    </div>
+                    {{ form_select.start_date }}
+                    {{ form_select.end_date }}
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit" id="button-search">Отобрать</button>
+                    </div>
+                </div>
+                <!-- Инициализация виджета "Bootstrap datetimepicker" -->
+                <script>
+                    $('.input-daterange').datepicker({
+                        format: "dd.mm.yyyy",
+                        endDate: "+0d",
+                        language: "ru",
+                        todayBtn: "linked",
+                        todayHighlight: true
+                    });
+                </script>
+            </form>
+            {% if logs %}
+                <h4>Логи за период с {{ start_date }} по {{ end_date }}:</h4>
+                <ul>
+                    {% for log in logs %}
+                        <li>{{ log.get_event_display }} - {{ log.event_date }} - {{ log.participan }}{% if log.search_string %} - {{ log.search_string }}{% endif %}{% if log.download_xml %} - {{ log.download_xml }}{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+        </div>
+    </main>
+{% endblock %}

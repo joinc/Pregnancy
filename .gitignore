@@ -1,6 +1,7 @@
 __pycache__/
 .idea/
 venv/
+upload/
 Main/migrations/
 Main/static/
 Main/migrations/__init__.py

@@ -59,7 +59,7 @@ class Reference(models.Model):
     period_pregnancy = models.CharField('Срок беременности (количество недель)', max_length=3, )
     doctor = models.CharField('ФИО врача', max_length=128, default='', )
     sign = models.CharField('Электронная подпись', max_length=128, default='', )
-    xml_file = models.FileField('XML файл', upload_to='xml/%Y/%m/%d', null=False, )
+    xml_file = models.FileField('XML файл', upload_to='%Y/%m/%d', null=False, )
 
     def __str__(self):
         return '{0}'.format(self.resident)

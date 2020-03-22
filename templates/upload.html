@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load static %}
+
+{% block html_title %}Главная{% endblock %}
+{% block html_head %}<link rel='stylesheet' href='{% static "css/main.css" %}' type='text/css' />{% endblock %}
+{% block html_body %}
+    <main role="main" class="container">
+        <div class="my-3 p-3 bg-white rounded shadow-sm">
+            <h4 class="border-bottom border-gray pb-2 mb-0">Загрузка файлов XML в реестр справок о постановке на учет по беременности и родам:</h4>
+            <form class="form-inline pt-3 border-bottom pb-3" method='post' action='' enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="col-auto mt-1">
+                    <h5>Загрузить XML файлы:</h5>
+                </div>
+                <div class="col-auto mr-auto">
+                        {{ form_upload.files }}
+                </div>
+                <div class="col-auto mr-0 text-right">
+                    <button type="submit" class="btn btn-outline-primary">Загрузить</button>
+                </div>
+            </form>
+            {% if successfully %}
+                <h4>Успешно загружены фалйлы ({{ successfully|length }}):</h4>
+                <ul>
+                    {% for s in successfully %}
+                        <li>{{ s }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </main>
+{% endblock %}
