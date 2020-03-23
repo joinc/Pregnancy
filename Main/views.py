@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import time
+import re
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import auth, User
 from django.conf import settings
-from .models import UserProfile, Logs, Reference
+from datetime import datetime
+from xml.dom import minidom
+from .models import UserProfile, Logs, Reference, Resident
 from .forms import FormUser, FormSearch, FormUpload, FormSelect
+
 
 ######################################################################################################################
 
@@ -21,9 +24,17 @@ def index(request):
         context['form_search'] = FormSearch(initial={'find': search, })
         context['toast'] = 'Вы искали ' + search + '.'
         log_add(0, profile, search, None)
+        snils = re.sub('\D', '', search)
+        resident_list = Resident.objects.filter(snils=snils)
+        if resident_list.count() > 0:
+            reference_list = []
+            for resident in resident_list:
+                reference_list.append(Reference.objects.filter(resident=resident))
+            context['reference_list'] = reference_list
     else:
         context['form_search'] = FormSearch()
     return render(request, 'index.html', context)
+
 
 ######################################################################################################################
 
@@ -50,12 +61,14 @@ def login(request):
         else:
             return render(request, 'login.html', {'next': settings.SUCCESS_URL})
 
+
 ######################################################################################################################
 
 
 def logout(request):
     auth.logout(request)
     return redirect(reverse('index'))
+
 
 ######################################################################################################################
 
@@ -68,6 +81,52 @@ def log_add(event, participan, search_string, download_xml):
     log.download_xml = download_xml
     log.save()
 
+
+######################################################################################################################
+
+
+def get_xml_text(xmlroot, tag, default):
+    result = default
+    data = xmlroot.getElementsByTagName(tag)
+    if len(data) > 0:
+        try:
+            result = data[0].firstChild.data
+        except:
+            pass
+    return result
+
+
+######################################################################################################################
+
+
+def get_xml_bool(xmlroot, tag, default):
+    result = default
+    data = xmlroot.getElementsByTagName(tag)
+    if len(data) > 0:
+        try:
+            if data[0].firstChild.data == 'Да':
+                result = True
+            if data[0].firstChild.data == 'Нет':
+                result = False
+        except:
+            pass
+    return result
+
+
+######################################################################################################################
+
+
+def get_xml_date(xmlroot, tag, default):
+    result = default
+    data = xmlroot.getElementsByTagName(tag)
+    if len(data) > 0:
+        try:
+            result = datetime.strptime(data[0].firstChild.data, '%d.%m.%Y').date()
+        except:
+            pass
+    return result
+
+
 ######################################################################################################################
 
 
@@ -77,6 +136,7 @@ def get_user_list(profile):
     if profile.role == 1:
         return UserProfile.objects.filter(owner=profile.user)
     return None
+
 
 ######################################################################################################################
 
@@ -93,6 +153,38 @@ def user_list_context(request, initial, info):
         form_user = FormUser()
     context = {'profile': profile, 'userlist': userlist, 'usercount': usercount, 'form_user': form_user, }
     return context
+
+
+######################################################################################################################
+
+
+def find_resident(r_first_name, r_middle_name, r_last_name, r_snils, r_birthday):
+
+    def new_resident(n_first_name, n_middle_name, n_last_name, n_snils, n_birthday):
+        resident = Resident()
+        resident.first_name = n_last_name
+        resident.middle_name = n_middle_name
+        resident.last_name = n_first_name
+        resident.birthday = n_birthday
+        resident.snils = n_snils
+        resident.save()
+        return resident
+
+    r_snils = re.sub('\D', '', r_snils)
+    residents = Resident.objects.filter(snils=r_snils)
+    new = True
+    if residents.count() > 0:
+        for resident in residents:
+            if resident.snils == r_snils \
+                    and resident.first_name == r_last_name \
+                    and resident.middle_name == r_middle_name \
+                    and resident.last_name == r_first_name \
+                    and resident.birthday != r_birthday:
+                new = True
+                break
+        if not new:
+            return resident
+    return new_resident(r_first_name, r_middle_name, r_last_name, r_snils, r_birthday)
 
 ######################################################################################################################
 
@@ -114,6 +206,7 @@ def logs_list(request):
     context['form_select'] = form_select
     return render(request, 'logs.html', context)
 
+
 ######################################################################################################################
 
 
@@ -129,9 +222,27 @@ def upload(request):
             reference.load_owner = profile
             successfully.append(str(file))
             reference.xml_file.save(file.name, file)
+            xmldoc = minidom.parse(reference.xml_file.file)
+            xmldoc.normalize()
+            doc = xmldoc.getElementsByTagName('Organization')[0]
+            reference.organization = get_xml_text(doc, 'Org', reference.organization)
+            reference.number = get_xml_text(doc, 'Number', reference.number)
+            reference.issue_date = get_xml_date(doc, 'DateSpr', reference.issue_date)
+            first_name = get_xml_text(doc, 'FirstName', '')
+            last_name = get_xml_text(doc, 'LastName', '')
+            middle_name = get_xml_text(doc, 'MiddleName', '')
+            birthday = get_xml_date(doc, 'Birthdate', datetime(1900, 1, 1))
+            snils = get_xml_text(doc, 'Snils', '')
+            reference.resident = find_resident(first_name, middle_name, last_name, snils, birthday)
+            reference.address = get_xml_text(doc, 'Address', reference.address)
+            reference.early_registration = get_xml_bool(doc, 'EarlyRegistration', reference.early_registration)
+            reference.period_pregnancy = get_xml_text(doc, 'PeriodPregnancy', reference.period_pregnancy)
+            reference.doctor = get_xml_text(doc, 'Doctor', reference.doctor)
+            reference.sign = get_xml_text(doc, 'Sign', reference.sign)
             reference.save()
         context['successfully'] = successfully
     return render(request, 'upload.html', context)
+
 
 ######################################################################################################################
 

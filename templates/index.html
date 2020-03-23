@@ -1,7 +1,10 @@
 {% extends "base.html" %}{% load static %}
 
 {% block html_title %}Главная{% endblock %}
-{% block html_head %}<link rel='stylesheet' href='{% static "css/main.css" %}' type='text/css' />{% endblock %}
+{% block html_head %}
+    <link rel='stylesheet' href='{% static "css/main.css" %}' type='text/css' />
+    <script src='{% static "js/jquery.inputmask.js" %}'></script>
+{% endblock %}
 {% block html_body %}
     <main role="main" class="container">
         <div class="my-3 p-3 bg-white rounded shadow-sm">
@@ -9,12 +12,28 @@
             <form method='post' class="mt-3" action='{% url 'index' %}'>
                 {% csrf_token %}
                 <div class="input-group mb-3">
-                    {{ form_search }}
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">Введите СНИЛС:</span>
+                    </div>
+                    {{ form_search.find }}
                     <div class="input-group-append">
                         <button class="btn btn-outline-secondary" type="submit" id="button-search"><i class="fas fa-search"></i> Поиск</button>
                     </div>
                 </div>
             </form>
+            {% if reference_list %}
+                {% for reference in reference_list %}
+                    <div>
+                        Сюда будет выводится результат поиска
+                        {{ reference }}
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
     </main>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#id_find').inputmask({mask: '999-999-999 99'});
+        });
+    </script>
 {% endblock %}

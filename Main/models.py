@@ -33,7 +33,7 @@ class Resident(models.Model):
     snils = models.CharField('СНИЛС', max_length=11, default='', )
 
     def __str__(self):
-        return '{0} {1} {3}'.format(self.last_name, self.first_name, self.middle_name)
+        return '{0} {1} {2}'.format(self.last_name, self.first_name, self.middle_name)
 
     class Meta:
         ordering = 'last_name', 'first_name',

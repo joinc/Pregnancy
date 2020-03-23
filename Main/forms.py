@@ -72,9 +72,7 @@ class FormSearch(forms.Form):
 
     find = forms.CharField(
         label='',
-        widget=forms.TextInput(attrs={'size': '40', 'placeholder': 'Введите СНИЛС',
-                                      'type': 'text', 'class': 'form-control',
-                                      'aria-label': 'Введите СНИЛС'}),
+        widget=forms.TextInput(attrs={'type': 'text', 'class': 'form-control'}),
         required=False,
     )
 
