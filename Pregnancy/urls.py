@@ -26,5 +26,10 @@ urlpatterns = [
     path('logout/', views.logout, name='logout', ),
     path('user/list', views.user_list, name='userlist', ),
     path('logs/list', views.logs_list, name='logslist', ),
-    path('upload/', views.upload, name='upload', ),
+    path('upload/', views.xml_upload, name='upload', ),
+    path('card/<int:card_id>/show', views.card_show, name='card', ),
+    path('card/<int:card_id>/download', views.xml_download, name='download', ),
+    path('card/<int:card_id>/print', views.card_print, name='print', ),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

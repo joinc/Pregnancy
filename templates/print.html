@@ -1,0 +1,72 @@
+{% extends "base.html" %}{% load static %}
+{% block html_title %}Печать справки о постановке на учет по беременности и родам{% endblock %}
+{% block html_body_menu %}{% endblock %}
+{% block html_body %}
+    <body onload="printit()">
+    <script Language="Javascript">
+        function printit(){
+            if (window.print) {
+                window.print();
+                setTimeout(function () { window.close(); }, 100);
+            } else {
+                var WebBrowser = '<OBJECT ID="WebBrowser1" WIDTH=0 HEIGHT=0 CLASSID="CLSID:8856F961-340A-11D0-A96B-00C04FD705A2"></OBJECT>';
+                document.body.insertAdjacentHTML('beforeEnd', WebBrowser);
+                WebBrowser1.ExecWB(6, 2);//Use a 1 vs. a 2 for a prompting dialog box WebBrowser1.outerHTML = "";
+            }
+        }
+    </script>
+    <div class="mb-3">
+        <h6>{{ card.organization }}</h6>
+        <small class="form-text text-muted">Наименование медицинской организации, выдавшей справку</small>
+    </div>
+    <div class="mb-3">
+        <h6>{{ card.number }}</h6>
+        <small class="form-text text-muted">Номер спраки</small>
+    </div>
+    <div class="mb-3">
+        <h6>{{ card.issue_date }}</h6>
+        <small class="form-text text-muted">Дата выдачи справки</small>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <h6>{{ card.resident.last_name }}</h6>
+            <small class="form-text text-muted">Фамилия</small>
+        </div>
+        <div class="col-md-4 mb-3">
+            <h6>{{ card.resident.first_name }}</h6>
+            <small class="form-text text-muted">Имя</small>
+        </div>
+        <div class="col-md-4 mb-3">
+            <h6>{{ card.resident.middle_name }}</h6>
+            <small class="form-text text-muted">Отчество</small>
+        </div>
+    </div>
+    <div class="mb-3">
+        <h6>{{ card.resident.birthday}}</h6>
+        <small class="form-text text-muted">Дата рождения</small>
+    </div>
+    <div class="mb-3">
+        <h6>{{ snils }}</h6>
+        <small class="form-text text-muted">СНИЛС</small>
+    </div>
+    <div class="mb-3">
+        <h6>{{ card.address }}</h6>
+        <small class="form-text text-muted">Адрес места жительства</small>
+    </div>
+    <div class="mb-3">
+        <h6>{% if card.early_registration %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-times"></i>{% endif %}</h6>
+        <small class="form-text text-muted">Факт постановки на учет в ранние сроки беременности</small>
+    </div>
+    <div class="mb-3">
+        <h6>{{ card.period_pregnancy }}</h6>
+        <small class="form-text text-muted">Срок беременности</small>
+    </div>
+    <div class="mb-3">
+        <h6>{{ card.doctor }}</h6>
+        <small class="form-text text-muted">ФИО врача</small>
+    </div>
+    <div class="mb-3">
+        <h6>{{ card.sign }}</h6>
+        <small class="form-text text-muted">Поле для электронной подписи</small>
+    </div>
+{% endblock %}

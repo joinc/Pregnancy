@@ -86,7 +86,7 @@ class Logs(models.Model):
         return '{0}'.format(self.event_date)
 
     class Meta:
-        ordering = 'event_date',
+        ordering = '-event_date',
         verbose_name = 'Логи'
         verbose_name_plural = 'Логи'
         managed = True

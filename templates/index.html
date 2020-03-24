@@ -22,18 +22,48 @@
                 </div>
             </form>
             {% if reference_list %}
-                {% for reference in reference_list %}
-                    <div>
-                        Сюда будет выводится результат поиска
-                        {{ reference }}
-                    </div>
-                {% endfor %}
+                <h4 class="pb-2 sm-0">Результаты поиска:</h4>
+                <div class="list-group">
+                    {% for reference in reference_list %}
+                        <button type="button" class="list-group-item list-group-item-action" onclick="ShowCard('{% url 'card' reference.id %}')">
+                            Справка №{{ reference.number }} от {{ reference.issue_date }} выдана {{ reference.resident }}
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if noresult %}
+                <h4 class="pb-2 sm-0">Не найдено ни одного совпадаения.</h4>
             {% endif %}
         </div>
     </main>
+    <!-- Окно отображения карточки -->
+    <div class="modal fade" id="ModalCard" tabindex="-1" role="dialog" aria-labelledby="ModalCardTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content text-left">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="ModalCardTitle">Справка о постановке на учет по беременности и родам:</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body" id="Card"></div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- /Окно создания нового пользователя -->
     <script type="text/javascript">
         $(document).ready(function(){
             $('#id_find').inputmask({mask: '999-999-999 99'});
         });
+        function ShowCard(link) {
+
+            $.get(link, function (data) {
+                $('#Card').html(data);
+            });
+            $('#ModalCard').modal('show');
+        }
+
     </script>
 {% endblock %}

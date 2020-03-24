@@ -1,0 +1,58 @@
+<div class="mb-3">
+    <h6>{{ card.organization }}</h6>
+    <small class="form-text text-muted">Наименование медицинской организации, выдавшей справку</small>
+</div>
+<div class="mb-3">
+    <h6>{{ card.number }}</h6>
+    <small class="form-text text-muted">Номер спраки</small>
+</div>
+<div class="mb-3">
+    <h6>{{ card.issue_date }}</h6>
+    <small class="form-text text-muted">Дата выдачи справки</small>
+</div>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <h6>{{ card.resident.last_name }}</h6>
+        <small class="form-text text-muted">Фамилия</small>
+    </div>
+    <div class="col-md-4 mb-3">
+        <h6>{{ card.resident.first_name }}</h6>
+        <small class="form-text text-muted">Имя</small>
+    </div>
+    <div class="col-md-4 mb-3">
+        <h6>{{ card.resident.middle_name }}</h6>
+        <small class="form-text text-muted">Отчество</small>
+    </div>
+</div>
+<div class="mb-3">
+    <h6>{{ card.resident.birthday}}</h6>
+    <small class="form-text text-muted">Дата рождения</small>
+</div>
+<div class="mb-3">
+    <h6>{{ snils }}</h6>
+    <small class="form-text text-muted">СНИЛС</small>
+</div>
+<div class="mb-3">
+    <h6>{{ card.address }}</h6>
+    <small class="form-text text-muted">Адрес места жительства</small>
+</div>
+<div class="mb-3">
+    <h6>{% if card.early_registration %}<i class="fas fa-check"></i>{% else %}<i class="fas fa-times"></i>{% endif %}</h6>
+    <small class="form-text text-muted">Факт постановки на учет в ранние сроки беременности</small>
+</div>
+<div class="mb-3">
+    <h6>{{ card.period_pregnancy }}</h6>
+    <small class="form-text text-muted">Срок беременности</small>
+</div>
+<div class="mb-3">
+    <h6>{{ card.doctor }}</h6>
+    <small class="form-text text-muted">ФИО врача</small>
+</div>
+<div class="mb-3">
+    <h6>{{ card.sign }}</h6>
+    <small class="form-text text-muted">Поле для электронной подписи</small>
+</div>
+<div class="text-right">
+    <a href="{% url 'download' card.id %}" class="btn btn-outline-primary"><i class="fas fa-download"></i> Скачать xml-файл</a>
+    <a href="{% url 'print' card.id %}" class="btn btn-outline-secondary" target="_blank"><i class="fas fa-print"></i> Распечатать</a>
+</div>

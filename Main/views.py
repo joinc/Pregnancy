@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import os
 import re
+import mimetypes
 from django.shortcuts import render, get_object_or_404, redirect, reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import auth, User
 from django.conf import settings
+from django.http import HttpResponse
 from datetime import datetime
 from xml.dom import minidom
 from .models import UserProfile, Logs, Reference, Resident
@@ -22,15 +25,18 @@ def index(request):
     if request.POST:
         search = request.POST['find']
         context['form_search'] = FormSearch(initial={'find': search, })
-        context['toast'] = 'Вы искали ' + search + '.'
         log_add(0, profile, search, None)
         snils = re.sub('\D', '', search)
         resident_list = Resident.objects.filter(snils=snils)
         if resident_list.count() > 0:
             reference_list = []
             for resident in resident_list:
-                reference_list.append(Reference.objects.filter(resident=resident))
+                references = Reference.objects.filter(resident=resident)
+                for reference in references:
+                    reference_list.append(reference)
             context['reference_list'] = reference_list
+        else:
+            context['noresult'] = True
     else:
         context['form_search'] = FormSearch()
     return render(request, 'index.html', context)
@@ -190,6 +196,30 @@ def find_resident(r_first_name, r_middle_name, r_last_name, r_snils, r_birthday)
 
 
 @login_required
+def card_show(request, card_id):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    card = get_object_or_404(Reference, id=card_id)
+    log_add(1, profile, '', card)
+    snils = str(card.resident.snils)
+    snils = snils[:3] + '-' + snils[3:6] + '-' + snils[6:9] + ' ' + snils[9:]
+    context = {'card': card, 'snils': snils, }
+    return render(request, 'card.html', context)
+
+
+######################################################################################################################
+
+
+def card_print(request, card_id):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    card = get_object_or_404(Reference, id=card_id)
+    log_add(3, profile, '', card)
+    context = {'card': card, }
+    return render(request, 'print.html', context)
+
+######################################################################################################################
+
+
+@login_required
 def logs_list(request):
     profile = get_object_or_404(UserProfile, user=request.user)
     context = {'profile': profile, }
@@ -206,12 +236,28 @@ def logs_list(request):
     context['form_select'] = form_select
     return render(request, 'logs.html', context)
 
+######################################################################################################################
+
+
+@login_required
+def xml_download(request, card_id):
+    profile = get_object_or_404(UserProfile, user=request.user)
+    card = get_object_or_404(Reference, id=card_id)
+    log_add(2, profile, '', card)
+    response = HttpResponse(card.xml_file.file)
+    file_type = mimetypes.guess_type(card.xml_file.name)
+    if file_type is None:
+        file_type = 'application/octet-stream'
+    response['Content-Type'] = file_type
+    response['Content-Length'] = card.xml_file.size
+    response['Content-Disposition'] = "attachment; filename=" + card.xml_file.name
+    return response
 
 ######################################################################################################################
 
 
 @login_required
-def upload(request):
+def xml_upload(request):
     profile = get_object_or_404(UserProfile, user=request.user)
     form_upload = FormUpload()
     context = {'profile': profile, 'form_upload': form_upload, }
