@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import re
 import mimetypes
 from django.shortcuts import render, get_object_or_404, redirect, reverse
@@ -9,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import auth, User
 from django.conf import settings
 from django.http import HttpResponse
-from datetime import datetime
+from datetime import datetime, timedelta
 from xml.dom import minidom
 from .models import UserProfile, Logs, Reference, Resident
 from .forms import FormUser, FormSearch, FormUpload, FormSelect
@@ -18,8 +17,24 @@ from .forms import FormUser, FormSearch, FormUpload, FormSelect
 ######################################################################################################################
 
 
+def admin_only(function):
+    def _inner(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            profile = get_object_or_404(UserProfile, user=request.user)
+            if not profile.role == 2:
+                return redirect(reverse('index'))
+        else:
+            return redirect(reverse('login'))
+        return function(request, *args, **kwargs)
+    return _inner
+
+
+######################################################################################################################
+
+
 @login_required
 def index(request):
+    # Главная страница со строкой поиска
     profile = get_object_or_404(UserProfile, user=request.user)
     context = {'profile': profile, }
     if request.POST:
@@ -46,6 +61,7 @@ def index(request):
 
 
 def login(request):
+    # Вход пользователя
     if request.POST:
         username = request.POST['username']
         password = request.POST['password']
@@ -72,6 +88,7 @@ def login(request):
 
 
 def logout(request):
+    # Выход пользователя
     auth.logout(request)
     return redirect(reverse('index'))
 
@@ -192,6 +209,7 @@ def find_resident(r_first_name, r_middle_name, r_last_name, r_snils, r_birthday)
             return resident
     return new_resident(r_first_name, r_middle_name, r_last_name, r_snils, r_birthday)
 
+
 ######################################################################################################################
 
 
@@ -209,6 +227,7 @@ def card_show(request, card_id):
 ######################################################################################################################
 
 
+@login_required
 def card_print(request, card_id):
     profile = get_object_or_404(UserProfile, user=request.user)
     card = get_object_or_404(Reference, id=card_id)
@@ -216,31 +235,54 @@ def card_print(request, card_id):
     context = {'card': card, }
     return render(request, 'print.html', context)
 
+
 ######################################################################################################################
 
 
-@login_required
+@admin_only
 def logs_list(request):
+    # Выводит страницу с логами использования полязователями системы
     profile = get_object_or_404(UserProfile, user=request.user)
     context = {'profile': profile, }
     if request.POST:
         start_date = request.POST['start_date']
         end_date = request.POST['end_date']
-        logs = Logs.objects.all()
-        context['logs'] = logs
+        form_select = FormSelect(request.POST)
         context['start_date'] = start_date
         context['end_date'] = end_date
-        form_select = FormSelect(initial={'start_date': start_date, 'end_date': end_date, })
+        start_date = datetime.strptime(start_date, '%d.%m.%Y')
+        end_date = datetime.strptime(end_date, '%d.%m.%Y') + timedelta(hours=24)
+        unsort_user_data = {}
+        for iuser in UserProfile.objects.all():
+            user_log = Logs.objects.filter(event_date__range=[start_date, end_date]).filter(participan=iuser).count()
+            if user_log > 0:
+                user_name = iuser.user.id
+                unsort_user_data[user_name] = user_log
+        sort_user_data = sorted(unsort_user_data.items(), reverse=True, key=lambda x: x[1])
+        title = ['ФИО', 'Поиск по СНИЛС', 'Просмотр карточки', 'Скачивание xml-файла', 'Печать карточки']
+        user_data = [title]
+        for key, value in sort_user_data:
+            user = get_object_or_404(UserProfile, user=key)
+            data = [user.user.get_full_name() + ' (' + str(value) + ')']
+            for i in range(0, 4):
+                data.append(Logs.objects.filter(event_date__range=[start_date, end_date]).filter(participan__user=key).filter(event=i).count())
+            user_data.append(data)
+        context['user_data'] = user_data
     else:
-        form_select = FormSelect()
+        end_date = datetime.now()
+        month_delta = timedelta(days=30)
+        start_date = end_date - month_delta
+        form_select = FormSelect(initial={'start_date': start_date, 'end_date': end_date, })
     context['form_select'] = form_select
     return render(request, 'logs.html', context)
+
 
 ######################################################################################################################
 
 
 @login_required
 def xml_download(request, card_id):
+    # Скачивает xml-файл, приложенный к карточке
     profile = get_object_or_404(UserProfile, user=request.user)
     card = get_object_or_404(Reference, id=card_id)
     log_add(2, profile, '', card)
@@ -253,11 +295,13 @@ def xml_download(request, card_id):
     response['Content-Disposition'] = "attachment; filename=" + card.xml_file.name
     return response
 
+
 ######################################################################################################################
 
 
-@login_required
+@admin_only
 def xml_upload(request):
+    # Загружает xml-файлы и создает на их основе карточки
     profile = get_object_or_404(UserProfile, user=request.user)
     form_upload = FormUpload()
     context = {'profile': profile, 'form_upload': form_upload, }
@@ -295,6 +339,7 @@ def xml_upload(request):
 
 @login_required
 def user_list(request):
+    # Выводит страницу со списком пользователей (Администраторы видят всех, Модераторы видят только)
     profile = get_object_or_404(UserProfile, user=request.user)
     if request.POST:
         if "adduser" in request.POST:
@@ -388,5 +433,6 @@ def user_list(request):
             return render(request, 'users.html', context)
         else:
             return redirect(reverse('index'))
+
 
 ######################################################################################################################
