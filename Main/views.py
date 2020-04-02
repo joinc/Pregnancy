@@ -300,7 +300,7 @@ def xml_download(request, card_id):
 
 
 @admin_only
-def xml_upload(request):
+def xml_export(request):
     # Загружает xml-файлы и создает на их основе карточки
     profile = get_object_or_404(UserProfile, user=request.user)
     form_upload = FormUpload()
