@@ -414,8 +414,9 @@ def user_list(request):
                 elif passwd2 == user.user.get_username():
                     info = 'Пароль совпадает с логином.'
                 else:
-                    user.user.set_password(passwd2)
-                    user.user.save()
+                    if not user.user.is_superuser:
+                        user.user.set_password(passwd2)
+                        user.user.save()
                     context = user_list_context(request, None, None)
                     context['toast'] = 'Изменен пароль для пользователя ' + user.user.get_full_name() + '.'
                     return render(request, 'users.html', context)

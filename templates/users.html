@@ -42,11 +42,13 @@
                             @{{ u.owner.get_username }}
                         </td>
                         <td class="text-right ">
-                            <button type="button" class="btn btn-outline-info" onclick="UserPassword('{{ u.user.get_full_name }}', '{{ u.user.id }}')" title="Сменить пароль пользователя"><i class="fas fa-key"></i></button>
-                            {% if u.blocked %}
-                                <button type="button" class="btn btn-outline-success" onclick="UserUnblock('{{ u.user.get_full_name }}', '{{ u.user.id }}')" title="Разблокировать пользователя"><i class="fas fa-lock-open"></i></button>
-                            {% else %}
-                                <button type="button" class="btn btn-outline-danger" onclick="UserBlock('{{ u.user.get_full_name }}', '{{ u.user.id }}')" title="Заблокировать пользователя"><i class="fas fa-lock"></i></button>
+                            {% if not u.user.is_superuser %}
+                                <button type="button" class="btn btn-outline-info" onclick="UserPassword('{{ u.user.get_full_name }}', '{{ u.user.id }}')" title="Сменить пароль пользователя"><i class="fas fa-key"></i></button>
+                                {% if u.blocked %}
+                                    <button type="button" class="btn btn-outline-success" onclick="UserUnblock('{{ u.user.get_full_name }}', '{{ u.user.id }}')" title="Разблокировать пользователя"><i class="fas fa-lock-open"></i></button>
+                                {% else %}
+                                    <button type="button" class="btn btn-outline-danger" onclick="UserBlock('{{ u.user.get_full_name }}', '{{ u.user.id }}')" title="Заблокировать пользователя"><i class="fas fa-lock"></i></button>
+                                {% endif %}
                             {% endif %}
                         </td>
                     </tr>
