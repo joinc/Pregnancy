@@ -331,7 +331,7 @@ def xml_export(request):
             reference.sign = get_xml_text(doc, 'Sign', reference.sign)
             reference.save()
         context['successfully'] = successfully
-    return render(request, 'upload.html', context)
+    return render(request, 'export.html', context)
 
 
 ######################################################################################################################
